@@ -1,9 +1,10 @@
 <script>
 	import { db, storage } from '$lib/db/firebase.js';
-	import { collection, addDoc } from 'firebase/firestore';
+	import { collection, addDoc, collectionGroup } from 'firebase/firestore';
 	import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 	let submissionItem = {};
+	const existingCreatorNames = ['user1', 'user2'];
 
 	const isUrlValid = (url) => {
 		try {
@@ -14,57 +15,44 @@
 		}
 	};
 
-	const uploadFile = (file) => {
+	const uploadFile = async (file) => {
 		const metadata = {};
 
 		// Upload file and metadata to the object 'images/mountains.jpg'
 		const storageRef = ref(storage, `entities-dev/${submissionItem.creatorName}/${file.name}`);
 		const uploadTask = uploadBytesResumable(storageRef, file, metadata);
 
-		// Listen for state changes, errors, and completion of the upload.
-		uploadTask.on(
-			'state_changed',
-			(snapshot) => {
-				// Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-				const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-				console.log('Upload is ' + progress + '% done');
-				switch (snapshot.state) {
-					case 'paused':
-						console.log('Upload is paused');
-						break;
-					case 'running':
-						console.log('Upload is running');
-						break;
+		return new Promise(async (resolve, reject) => {
+			// Listen for state changes, errors, and completion of the upload.
+			uploadTask.on(
+				'state_changed',
+				(snapshot) => {
+					// ... (progress and state change handling)
+				},
+				(error) => {
+					// ... (error handling)
+					reject(error); // Reject the promise on error
+				},
+				async () => {
+					try {
+						// Upload completed successfully, now we can get the download URL
+						const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+						console.log('File available at', downloadURL);
+						resolve(downloadURL); // Resolve the promise with the download URL
+					} catch (error) {
+						reject(error); // Reject the promise if getting the download URL fails
+					}
 				}
-			},
-			(error) => {
-				switch (error.code) {
-					case 'storage/unauthorized':
-						console.error("User doesn't have permission to access the object");
-						break;
-					case 'storage/canceled':
-						console.error('User canceled the upload');
-						break;
-					case 'storage/unknown':
-						console.error('Unknown error occurred, inspect error.serverResponse');
-						break;
-				}
-			},
-			() => {
-				// Upload completed successfully, now we can get the download URL
-				getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-					console.log('File available at', downloadURL);
-				});
-			}
-		);
+			);
+		});
 	};
 
-	const handleSubmitDB = async () => {
+	const saveToDB = async (entityName, entityImgRef, creatorName, creatorLink) => {
 		const submission = {
-			entityName: submissionItem.entityName,
-			entityImgRef: 'test',
-			creatorLink: 'test',
-			creatorName: submissionItem.creatorName,
+			entityName: entityName,
+			entityImgRef: entityImgRef,
+			creatorName: creatorName,
+			creatorLink: creatorLink,
 			tags: ['71NjWeq7uXfMqA0zAZvC', 'DaRKwIQFqrLLAtTtUYBx', 'jlDwLZ2OPAzi2n4Cjjm7'],
 			isApproved: false,
 			isActive: false,
@@ -75,10 +63,32 @@
 		console.log('Document written with ID: ', docRef.id);
 	};
 
-	const handleSubmitUI = () => {
+	const isCreatorNameValid = (name) => {
+		name = name.replace(/\s/g, '').toLowerCase(); // remove whitespace and make lowercase
+		return name.length > 0 && !existingCreatorNames.includes(name);
+	};
+
+	const handleSubmitUI = async () => {
 		console.log('submitting UI');
+
+		// TODO: check for validity of fields
+		// if (!isUrlValid(submissionItem.creatorLink)) {
+		// 	console.log('invalid creator link');
+		// 	return;
+		// }
+		if (!isCreatorNameValid(submissionItem.creatorLink)) {
+			console.log('invalid creator name');
+			return;
+		}
+		// upload img to Firebase Storage
+		const downloadURL = await uploadFile(submissionItem.entityImg[0]);
+		saveToDB(
+			submissionItem.entityName,
+			downloadURL,
+			submissionItem.creatorName,
+			submissionItem.creatorLink
+		);
 		console.log(submissionItem);
-		uploadFile(submissionItem.entityImg[0]);
 	};
 </script>
 
