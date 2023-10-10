@@ -1,10 +1,33 @@
 <script>
+	import { onMount } from 'svelte';
 	import { db, storage } from '$lib/db/firebase.js';
-	import { collection, addDoc, collectionGroup } from 'firebase/firestore';
+	import { collection, addDoc, getDocs, collectionGroup } from 'firebase/firestore';
 	import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 	let submissionItem = {};
 	const existingCreatorNames = ['user1', 'user2'];
+	let tags = [];
+
+	onMount(() => {
+		getTagsFromDB();
+	});
+
+	const getTagsFromDB = async () => {
+		const tagsRef = collection(db, 'tags');
+		const tagsSnapshot = await getDocs(tagsRef);
+		const tagsList = tagsSnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+		console.log(tagsList);
+		tags = tagsList;
+	};
+
+	const handleTagSelectOnChange = (e) => {
+		const MAX_TAG_SELECTIONS = 2;
+		const selectedOptions = Array.from(e.target.selectedOptions);
+
+		if (selectedOptions.length > MAX_TAG_SELECTIONS) {
+			selectedOptions.pop().selected = false;
+		}
+	};
 
 	const isUrlValid = (url) => {
 		try {
@@ -47,13 +70,13 @@
 		});
 	};
 
-	const saveToDB = async (entityName, entityImgRef, creatorName, creatorLink) => {
+	const saveToDB = async (entityName, entityImgRef, creatorName, creatorLink, tags) => {
 		const submission = {
 			entityName: entityName,
 			entityImgRef: entityImgRef,
 			creatorName: creatorName,
 			creatorLink: creatorLink,
-			tags: ['71NjWeq7uXfMqA0zAZvC', 'DaRKwIQFqrLLAtTtUYBx', 'jlDwLZ2OPAzi2n4Cjjm7'],
+			tags: tags,
 			isApproved: false,
 			isActive: false,
 			timestampSubmitted: new Date(),
@@ -68,7 +91,7 @@
 		return name.length > 0 && !existingCreatorNames.includes(name);
 	};
 
-	const handleSubmitUI = async () => {
+	const handleSubmitFormToDB = async () => {
 		console.log('submitting UI');
 
 		// TODO: check for validity of fields
@@ -86,8 +109,14 @@
 			submissionItem.entityName,
 			downloadURL,
 			submissionItem.creatorName,
-			submissionItem.creatorLink
+			submissionItem.creatorLink,
+			submissionItem.tags
 		);
+		console.log(submissionItem);
+	};
+
+	const handleSubmitUI = async () => {
+		console.log('submitting UI');
 		console.log(submissionItem);
 	};
 </script>
@@ -114,8 +143,16 @@
 			>Creator Link
 			<input type="text" name="creatorLink" bind:value={submissionItem.creatorLink} />
 		</label>
+		<label>
+			Tags
+			<select multiple bind:value={submissionItem.tags} on:change={handleTagSelectOnChange}>
+				{#each tags as tag}
+					<option value={tag.id}>{tag.id} - {tag.name}</option>
+				{/each}
+			</select>
+		</label>
 
-		<button class="btn-submit" on:click={handleSubmitUI}>Submit</button>
+		<button class="btn-submit" on:click={handleSubmitFormToDB}>Submit</button>
 	</form>
 </div>
 
