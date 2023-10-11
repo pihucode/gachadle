@@ -9,10 +9,10 @@
 	let tags = [];
 
 	onMount(() => {
-		getTagsFromDB();
+		fetchTagsFromDB();
 	});
 
-	const getTagsFromDB = async () => {
+	const fetchTagsFromDB = async () => {
 		const tagsRef = collection(db, 'tags');
 		const tagsSnapshot = await getDocs(tagsRef);
 		const tagsList = tagsSnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
