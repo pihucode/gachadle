@@ -1,46 +1,15 @@
 <script>
 	import { onMount } from 'svelte';
-	import { db, storage } from '$lib/db/firebase.js';
-	import {
-		doc,
-		addDoc,
-		getDoc,
-		getDocs,
-		updateDoc,
-		collection,
-		collectionGroup
-	} from 'firebase/firestore';
-	import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+	import { db } from '$lib/db/firebase.js';
+	import { doc, updateDoc } from 'firebase/firestore';
+	import { getImageUrl } from '$lib/services/fileService.js';
+	import { tagNameFromId } from '$lib/services/tagService.js';
+	import { fetchDataFromDB } from '$lib/services/submissionService.js';
 
 	let submissions = [];
-	onMount(() => {
-		fetchDataFromDB();
+	onMount(async () => {
+		submissions = await fetchDataFromDB();
 	});
-
-	const getImageUrl = async (imgPath) => {
-		const storageRef = ref(storage, imgPath);
-		const url = await getDownloadURL(storageRef);
-		return url;
-	};
-
-	const fetchDataFromDB = async () => {
-		const submissionsRef = collection(db, 'submissions-dev');
-		const submissionsSnapshot = await getDocs(submissionsRef);
-		const data = submissionsSnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-		submissions = data;
-		// console.log(submissions);
-	};
-
-	const tagNameFromId = async (tagId) => {
-		const docRef = doc(db, 'tags', tagId);
-		const docSnapshot = await getDoc(docRef);
-
-		if (docSnapshot.exists()) {
-			return docSnapshot.data().name;
-		} else {
-			return 'UNDEFINED TAG';
-		}
-	};
 
 	const toggleIsActive = async (id, value) => {
 		// update client-side
