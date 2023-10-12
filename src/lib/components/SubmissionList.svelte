@@ -43,18 +43,26 @@
 	};
 
 	const toggleIsActive = async (id, value) => {
+		// update client-side
+		const index = submissions.findIndex((s) => s.id === id);
+		submissions[index].isActive = value;
+
+		// update in db
 		const docRef = doc(db, 'submissions-dev', id);
 		await updateDoc(docRef, {
 			isActive: value
 		});
-		fetchDataFromDB();
 	};
 	const handleApprove = async (id, value) => {
+		// update client-side
+		const index = submissions.findIndex((s) => s.id === id);
+		submissions[index].isApproved = value;
+
+		// update in db
 		const docRef = doc(db, 'submissions-dev', id);
 		await updateDoc(docRef, {
 			isApproved: value
 		});
-		fetchDataFromDB();
 	};
 </script>
 
