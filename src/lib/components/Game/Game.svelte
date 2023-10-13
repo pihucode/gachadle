@@ -1,5 +1,5 @@
 <script>
-	import { tags } from '$lib/stores/gameStore';
+	import { fetchTagsFromDB } from '$lib/services/tagService.js';
 
 	let selectedTags = [];
 
@@ -15,19 +15,25 @@
 
 	const handlePull = () => {
 		console.log(selectedTags);
+		selectedTags = [];
 	};
 </script>
 
 <div class="container">
 	<h1>title</h1>
 	<button on:click={handlePull} disabled={selectedTags.length < 3}>interact</button>
-	{#each $tags as tag}
-		<button
-			on:click={() => handleTagSelect(tag)}
-			disabled={selectedTags.length === 3 && !selectedTags.includes(tag)}
-			class={selectedTags.includes(tag) ? 'tag__selected' : ''}>{tag}</button
-		>
-	{/each}
+
+	{#await fetchTagsFromDB()}
+		<p>Loading...</p>
+	{:then tags}
+		{#each tags as tag}
+			<button
+				on:click={() => handleTagSelect(tag)}
+				disabled={selectedTags.length === 3 && !selectedTags.includes(tag)}
+				class={selectedTags.includes(tag) ? 'tag__selected' : ''}>{tag.name} - {tag.id}</button
+			>
+		{/each}
+	{/await}
 </div>
 
 <style>
