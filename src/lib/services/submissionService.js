@@ -3,6 +3,8 @@ import {
     addDoc,
     getDocs,
     collection,
+    query,
+    where
 } from 'firebase/firestore';
 
 const fetchDataFromDB = async () => {
@@ -11,6 +13,19 @@ const fetchDataFromDB = async () => {
     const data = submissionsSnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
     return data;
 };
+
+// choose a random submission from the DB where isActive is true and its tags include at least one of the given tags
+const fetchRandomValidEntity = async (tagIds) => {
+    const q = query(
+        collection(db, 'submissions-dev'),
+        // where('isActive', '==', true),
+        where('tags', 'array-contains-any', tagIds)
+    );
+    const querySnapshot = await getDocs(q);
+    const data = querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    const random = data[Math.floor(Math.random() * data.length)];
+    return random;
+}
 
 const saveSubmissionToDB = async (
     entityName,
@@ -34,4 +49,4 @@ const saveSubmissionToDB = async (
     console.log('Document written with ID: ', docRef.id);
 };
 
-export { saveSubmissionToDB, fetchDataFromDB };
+export { fetchDataFromDB, fetchRandomValidEntity, saveSubmissionToDB };
