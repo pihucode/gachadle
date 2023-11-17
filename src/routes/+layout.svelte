@@ -1,8 +1,10 @@
 <script>
-	import { isEnvDev, isSignedIn } from '$lib/stores/generalStore.js';
+	import { isSignedIn, isEnvDev } from '$lib/stores/authStore.js';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import Loading from '$lib/components/Loading.svelte';
+	import { tick } from 'svelte';
 
 	$: if (browser && $isEnvDev && $page.url.pathname !== '/') {
 		// redirect to homepg
@@ -21,4 +23,9 @@
 	}
 </script>
 
-<slot />
+<!-- display once isEnvDev loads from the store -->
+{#await tick()}
+	<Loading />
+{:then _}
+	<slot />
+{/await}
