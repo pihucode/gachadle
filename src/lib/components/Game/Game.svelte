@@ -18,9 +18,23 @@
 
 	const handlePull = async () => {
 		const selectedTagIds = selectedTags.map((tag) => tag.id);
-		const res = await fetchRandomValidEntity(selectedTagIds);
-		console.log(res);
-		result = res;
+		const pullResult = await fetchRandomValidEntity(selectedTagIds);
+
+		const pullDetails = {
+			selectedTagIds,
+			pullResult,
+			timestamp: Date.now()
+		};
+		// save to local storage
+		localStorage.getItem('pullHistory')
+			? localStorage.setItem(
+					'pullHistory',
+					JSON.stringify([...JSON.parse(localStorage.getItem('pullHistory')), pullDetails])
+			  )
+			: localStorage.setItem('pullHistory', JSON.stringify([pullDetails]));
+
+		console.log(pullResult);
+		result = pullResult;
 		selectedTags = [];
 	};
 </script>
