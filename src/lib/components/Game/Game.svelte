@@ -2,6 +2,7 @@
 	import { getTagsToday } from '$lib/services/tagService.js';
 	import { fetchRandomValidEntity } from '$lib/services/submissionService.js';
 	import { getImageUrl } from '$lib/services/fileService.js';
+	import EntityList from '$lib/components/EntityList.svelte';
 
 	const NUM_TAGS = 3;
 	const NUM_SELECTABLE_TAGS = 2;
@@ -36,7 +37,11 @@
 			selectedTagIds,
 			date: new Date().toLocaleDateString()
 		};
-		localStorage.setItem('pullResultToday', JSON.stringify(data));
+		localStorage.setItem('pullResultToday', JSON.stringify(data)); // TODO - no longer needed ?
+		// save data to pull history
+		let arr = JSON.parse(localStorage.getItem('pullHistory')) || [];
+		arr.push(data);
+		localStorage.setItem('pullHistory', JSON.stringify(arr));
 	};
 
 	const handlePull = async () => {
@@ -92,6 +97,8 @@
 			{/each}
 		{/await}
 	{/if}
+
+	<EntityList />
 </div>
 
 <style>
@@ -106,8 +113,8 @@
 	}
 
 	.entityImg {
-		max-width: 100px;
-		max-height: 100px;
+		max-width: 150px;
+		max-height: 150px;
 		overflow: hidden;
 	}
 
