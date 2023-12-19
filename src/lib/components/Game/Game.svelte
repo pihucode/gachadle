@@ -1,8 +1,11 @@
 <script>
-	import { fetchTagsFromDB } from '$lib/services/tagService.js';
+	import { getTagsToday } from '$lib/services/tagService.js';
 	import { fetchRandomValidEntity } from '$lib/services/submissionService.js';
 	import { getImageUrl } from '$lib/services/fileService.js';
+	import EntityList from '$lib/components/EntityList.svelte';
 
+	const NUM_TAGS = 3;
+	const NUM_SELECTABLE_TAGS = 2;
 	let selectedTags = [];
 	let result;
 
@@ -13,50 +16,60 @@
 		} else {
 			selectedTags = [...selectedTags, tag];
 		}
-		console.log(tag);
+	};
+
+	// check if there is already a result for today in local storage
+	const pullResultToday = () => {
+		const data = localStorage.getItem('pullResultToday');
+		if (data) {
+			const { pullResult } = JSON.parse(data);
+			console.log(pullResult);
+			result = pullResult;
+			return false;
+		}
+		return false;
+	};
+
+	// TODO: move to service
+	const saveResultToLocalStorage = (result, selectedTagIds) => {
+		const data = {
+			pullResult: result,
+			selectedTagIds,
+			date: new Date().toLocaleDateString()
+		};
+		localStorage.setItem('pullResultToday', JSON.stringify(data)); // TODO - no longer needed ?
+		// save data to pull history
+		let arr = JSON.parse(localStorage.getItem('pullHistory')) || [];
+		arr.push(data);
+		localStorage.setItem('pullHistory', JSON.stringify(arr));
 	};
 
 	const handlePull = async () => {
 		const selectedTagIds = selectedTags.map((tag) => tag.id);
-		const pullResult = await fetchRandomValidEntity(selectedTagIds);
-
-		const pullDetails = {
-			selectedTagIds,
-			pullResult,
-			timestamp: Date.now()
-		};
-		// save to local storage
-		localStorage.getItem('pullHistory')
-			? localStorage.setItem(
-					'pullHistory',
-					JSON.stringify([...JSON.parse(localStorage.getItem('pullHistory')), pullDetails])
-			  )
-			: localStorage.setItem('pullHistory', JSON.stringify([pullDetails]));
-
-		console.log(pullResult);
-		result = pullResult;
+		const res = await fetchRandomValidEntity(selectedTagIds);
+		result = res;
+		saveResultToLocalStorage(res, selectedTagIds);
 		selectedTags = [];
 	};
+
+	const handleReset = () => {
+		result = null;
+		selectedTags = [];
+		localStorage.removeItem('pullResultToday');
+		localStorage.removeItem('tagsToday');
+		location.reload();
+	};
+
+	// exclude pullResultToday() from reactive statement {#if} to prevent triggering infinite re-renders
+	const hasPulledToday = pullResultToday();
 </script>
 
 <div class="container">
 	<h1>title</h1>
 
-	<button on:click={handlePull} disabled={selectedTags.length < 3}>interact</button>
+	<button on:click={handleReset}>reset</button>
 
-	{#await fetchTagsFromDB()}
-		<p>Loading...</p>
-	{:then tags}
-		{#each tags as tag}
-			<button
-				on:click={() => handleTagSelect(tag)}
-				disabled={selectedTags.length === 3 && !selectedTags.includes(tag)}
-				class={selectedTags.includes(tag) ? 'tag__selected' : ''}>{tag.name} - {tag.id}</button
-			>
-		{/each}
-	{/await}
-
-	{#if result}
+	{#if hasPulledToday || result}
 		<div class="col">
 			{#await getImageUrl(result.entityImgRef)}
 				<span>loading...</span>
@@ -67,7 +80,25 @@
 			{/await}
 			{result.entityName}
 		</div>
+	{:else}
+		<button on:click={handlePull} disabled={selectedTags.length < NUM_SELECTABLE_TAGS}
+			>interact</button
+		>
+
+		{#await getTagsToday(NUM_TAGS)}
+			<p>Loading...</p>
+		{:then tags}
+			{#each tags as tag}
+				<button
+					on:click={() => handleTagSelect(tag)}
+					disabled={selectedTags.length === NUM_SELECTABLE_TAGS && !selectedTags.includes(tag)}
+					class={selectedTags.includes(tag) ? 'tag__selected' : ''}>{tag.name} - {tag.id}</button
+				>
+			{/each}
+		{/await}
 	{/if}
+
+	<EntityList />
 </div>
 
 <style>
@@ -82,8 +113,8 @@
 	}
 
 	.entityImg {
-		max-width: 100px;
-		max-height: 100px;
+		max-width: 150px;
+		max-height: 150px;
 		overflow: hidden;
 	}
 
