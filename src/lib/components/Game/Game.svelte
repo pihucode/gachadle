@@ -4,6 +4,7 @@
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import EntityList from '$lib/components/EntityList.svelte';
 	import { getRarity } from '$lib/utils/entityUtils.js';
+	import UserCurrency from '$lib/components/UserCurrency.svelte';
 
 	const NUM_TAGS = 3;
 	const NUM_SELECTABLE_TAGS = 2;
@@ -104,6 +105,8 @@
 
 <div class="container">
 	<h1>title</h1>
+
+	<UserCurrency />
 
 	<button on:click={handleReset}>reset</button>
 

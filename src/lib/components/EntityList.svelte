@@ -64,8 +64,9 @@
 	}
 
 	.entityImg {
-		max-width: 150px;
-		max-height: 150px;
+		width: 150px;
+		height: 150px;
+		object-fit: cover;
 		overflow: hidden;
 	}
 </style>
