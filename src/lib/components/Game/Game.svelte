@@ -3,11 +3,18 @@
 	import { fetchRandomValidEntity } from '$lib/services/submissionService.js';
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import EntityList from '$lib/components/EntityList.svelte';
+	import { getRarity } from '$lib/utils/entityUtils.js';
 
 	const NUM_TAGS = 3;
 	const NUM_SELECTABLE_TAGS = 2;
+	const DUP_SHARD_AMT = 5;
+	const MAXED_DUP_SHARD_AMT = 20;
+	const MAX_DUP_COUNT = 15;
+
 	let selectedTags = [];
 	let result;
+	let shards = 0;
+	let dupCount = 0;
 
 	const handleTagSelect = (tag) => {
 		// remove if already in list, otherwise add
@@ -32,16 +39,47 @@
 
 	// TODO: move to service
 	const saveResultToLocalStorage = (result, selectedTagIds) => {
-		const data = {
+		const pullResultData = {
 			pullResult: result,
 			selectedTagIds,
 			date: new Date().toLocaleDateString()
 		};
-		localStorage.setItem('pullResultToday', JSON.stringify(data)); // TODO - no longer needed ?
+		localStorage.setItem('pullResultToday', JSON.stringify(pullResultData)); // TODO - no longer needed ?
 		// save data to pull history
 		let arr = JSON.parse(localStorage.getItem('pullHistory')) || [];
-		arr.push(data);
+		arr.push(pullResultData);
 		localStorage.setItem('pullHistory', JSON.stringify(arr));
+
+		// save data to user data
+		let userData = JSON.parse(localStorage.getItem('userData')) || {};
+		let ownedEntities = userData.ownedEntities || [];
+		let entityData = ownedEntities.find((c) => c.id === result.id);
+		if (entityData) {
+			// user already owns entity
+			if (entityData.duplicates === MAX_DUP_COUNT) {
+				shards = MAXED_DUP_SHARD_AMT;
+			} else {
+				entityData.duplicates++;
+				shards = DUP_SHARD_AMT;
+			}
+			// update entity data
+			ownedEntities = ownedEntities.map((e) => (e.id === result.id ? entityData : e));
+		} else {
+			// user doesn't own entity
+			entityData = {
+				id: result.id,
+				duplicates: 0,
+				currentExp: 0,
+				currentLevel: 0,
+				dateAcquired: new Date().toLocaleDateString()
+			};
+			ownedEntities.push(entityData);
+		}
+		dupCount = entityData.duplicates; // TODO - specify if a pulled entity is already maxed out
+		userData.ownedEntities = ownedEntities;
+		if (!userData.currencies) userData.currencies = { shards: 0 };
+		userData.currencies.shards += shards;
+		localStorage.setItem('userData', JSON.stringify(userData));
 	};
 
 	const handlePull = async () => {
@@ -74,11 +112,17 @@
 			{#await getImageUrl(result.entityImgRef)}
 				<span>loading...</span>
 			{:then url}
-				<img src={url} class="entityImg" alt={result.entityName} />
+				<div>
+					<img src={url} class="entityImg" alt={result.entityName} />
+				</div>
 			{:catch error}
 				<span>error: {error.message}</span>
 			{/await}
-			{result.entityName}
+			<p>{result.entityName}</p>
+			<p>{getRarity(dupCount)} - {dupCount}</p>
+			{#if shards > 0}
+				<p>+{shards} shards</p>
+			{/if}
 		</div>
 	{:else}
 		<button on:click={handlePull} disabled={selectedTags.length < NUM_SELECTABLE_TAGS}

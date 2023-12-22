@@ -1,6 +1,7 @@
 <script>
-	import { getImageUrl } from '$lib/services/fileService.js';
 	import { onMount } from 'svelte';
+	import { getImageUrl } from '$lib/services/fileService.js';
+	import { fetchSubmissionById } from '$lib/services/submissionService.js';
 
 	let entities = [];
 
@@ -9,8 +10,11 @@
 	});
 
 	const getAllEntities = () => {
-		const data = JSON.parse(localStorage.getItem('pullHistory')) || [];
-		entities = data;
+		const userData = JSON.parse(localStorage.getItem('userData'));
+		if (!userData) return;
+		const entityData = userData.ownedEntities || [];
+		console.log(entityData);
+		entities = entityData;
 	};
 </script>
 
@@ -19,14 +23,22 @@
 	<div class="cards">
 		{#each entities as e}
 			<div class="card">
-				{#await getImageUrl(e.pullResult.entityImgRef)}
+				{#await fetchSubmissionById(e.id)}
 					<span>loading...</span>
-				{:then url}
-					<img src={url} class="entityImg" alt={e.pullResult.entityName} />
+				{:then submission}
+					{#await getImageUrl(submission.entityImgRef)}
+						<span>loading...</span>
+					{:then url}
+						<img src={url} class="entityImg" alt={submission.entityName} />
+					{:catch error}
+						<span>error: {error.message}</span>
+					{/await}
+					<p>{submission.entityName}</p>
+					<p>{e.duplicates} dups</p>
+					<p>level {e.currentLevel}</p>
 				{:catch error}
 					<span>error: {error.message}</span>
 				{/await}
-				<p>{e.pullResult.entityName}</p>
 			</div>
 		{/each}
 	</div>
@@ -37,6 +49,9 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 10px;
+	}
+	.card * {
+		margin: 0;
 	}
 	.card {
 		display: flex;
