@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import { fetchSubmissionById } from '$lib/services/submissionService.js';
+	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
 
 	let entities = [];
 
@@ -34,7 +35,9 @@
 						<span>error: {error.message}</span>
 					{/await}
 					<p>{submission.entityName}</p>
-					<p>{e.duplicates} dups</p>
+					<p>{e.duplicates + 1} copies total</p>
+					<p>{getRarityStar(e.duplicates)} star ({getRarityName(e.duplicates)})</p>
+					<p>{getRarityProgress(e.duplicates)}/{getRarityStar(e.duplicates) + 1} to next rank up</p>
 					<p>level {e.currentLevel}</p>
 				{:catch error}
 					<span>error: {error.message}</span>

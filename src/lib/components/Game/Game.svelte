@@ -3,7 +3,7 @@
 	import { fetchRandomValidEntity } from '$lib/services/submissionService.js';
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import EntityList from '$lib/components/EntityList.svelte';
-	import { getRarity } from '$lib/utils/entityUtils.js';
+	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
 	import UserCurrency from '$lib/components/UserCurrency.svelte';
 
 	const NUM_TAGS = 3;
@@ -122,7 +122,7 @@
 				<span>error: {error.message}</span>
 			{/await}
 			<p>{result.entityName}</p>
-			<p>{getRarity(dupCount)} - {dupCount}</p>
+			<p>{getRarityName(dupCount)} - {dupCount} dups total</p>
 			{#if shards > 0}
 				<p>+{shards} shards</p>
 			{/if}
