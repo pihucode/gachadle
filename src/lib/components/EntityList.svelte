@@ -3,8 +3,10 @@
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import { fetchSubmissionById } from '$lib/services/submissionService.js';
 	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
+	import EntityModal from '$lib/components/EntityModal.svelte';
 
 	let entities = [];
+	let openedModalId = null;
 
 	onMount(() => {
 		getAllEntities();
@@ -17,10 +19,15 @@
 		console.log(entityData);
 		entities = entityData;
 	};
+
+	const closeModal = () => {
+		openedModalId = null;
+	};
 </script>
 
 <div>
 	<h1>entity list</h1>
+	<!-- TODO: Refactor into an unordered list -->
 	<div class="cards">
 		{#each entities as e}
 			<div class="card">
@@ -39,6 +46,13 @@
 					<p>{getRarityStar(e.duplicates)} star ({getRarityName(e.duplicates)})</p>
 					<p>{getRarityProgress(e.duplicates)}/{getRarityStar(e.duplicates) + 1} to next rank up</p>
 					<p>level {e.currentLevel}</p>
+
+					<EntityModal
+						showModal={openedModalId === e.id}
+						{closeModal}
+						data={submission.entityName}
+					/>
+					<button on:click={() => (openedModalId = e.id)}> details </button>
 				{:catch error}
 					<span>error: {error.message}</span>
 				{/await}
