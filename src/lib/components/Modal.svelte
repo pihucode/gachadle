@@ -11,7 +11,6 @@
 <dialog bind:this={dialog} on:close={closeModal} on:click|self={() => dialog.close()}>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
-		<slot name="title" />
 		<slot />
 		<!-- svelte-ignore a11y-autofocus -->
 		<button autofocus on:click={() => dialog.close()}>close modal</button>

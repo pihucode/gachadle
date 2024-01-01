@@ -50,7 +50,8 @@
 					<EntityModal
 						showModal={openedModalId === e.id}
 						{closeModal}
-						data={submission.entityName}
+						data={submission}
+						entity={e}
 					/>
 					<button on:click={() => (openedModalId = e.id)}> details </button>
 				{:catch error}
