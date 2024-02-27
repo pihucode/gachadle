@@ -54,7 +54,7 @@
 			submissionItem.creatorLink,
 			submissionItem.tags
 		);
-		console.log(submissionItem);
+		// console.log(submissionItem);
 	};
 </script>
 

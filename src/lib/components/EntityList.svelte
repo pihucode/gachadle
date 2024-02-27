@@ -16,7 +16,7 @@
 		const userData = JSON.parse(localStorage.getItem('userData'));
 		if (!userData) return;
 		const entityData = userData.ownedEntities || [];
-		console.log(entityData);
+		// console.log(entityData);
 		entities = entityData;
 	};
 

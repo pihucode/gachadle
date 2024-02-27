@@ -1,17 +1,30 @@
 <script>
-	import { fetchRandomFeaturedEntity } from '$lib/services/gachaService.js';
+	import { getTagsToday } from '$lib/services/tagService.js';
+	import { fetchRandomValidEntity } from '$lib/services/submissionService.js';
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import EntityList from '$lib/components/EntityList.svelte';
 	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
 	import UserCurrency from '$lib/components/UserCurrency.svelte';
 
+	const NUM_TAGS = 3;
+	const NUM_SELECTABLE_TAGS = 2;
 	const DUP_SHARD_AMT = 5;
 	const MAXED_DUP_SHARD_AMT = 20;
 	const MAX_DUP_COUNT = 15;
 
+	let selectedTags = [];
 	let result;
 	let shards = 0;
 	let dupCount = 0;
+
+	const handleTagSelect = (tag) => {
+		// remove if already in list, otherwise add
+		if (selectedTags.includes(tag)) {
+			selectedTags = selectedTags.filter((t) => t !== tag);
+		} else {
+			selectedTags = [...selectedTags, tag];
+		}
+	};
 
 	// check if there is already a result for today in local storage
 	const pullResultToday = () => {
@@ -20,15 +33,16 @@
 			const { pullResult } = JSON.parse(data);
 			// console.log(pullResult);
 			result = pullResult;
-			return true; // test
+			return false;
 		}
 		return false;
 	};
 
 	// TODO: move to service
-	const saveResultToLocalStorage = (result) => {
+	const saveResultToLocalStorage = (result, selectedTagIds) => {
 		const pullResultData = {
 			pullResult: result,
+			selectedTagIds,
 			date: new Date().toLocaleDateString()
 		};
 		localStorage.setItem('pullResultToday', JSON.stringify(pullResultData)); // TODO - no longer needed ?
@@ -70,15 +84,18 @@
 	};
 
 	const handlePull = async () => {
-		const res = await fetchRandomFeaturedEntity();
+		const selectedTagIds = selectedTags.map((tag) => tag.id);
+		const res = await fetchRandomValidEntity(selectedTagIds);
 		result = res;
-		console.log(res);
-		saveResultToLocalStorage(res);
+		saveResultToLocalStorage(res, selectedTagIds);
+		selectedTags = [];
 	};
 
 	const handleReset = () => {
 		result = null;
+		selectedTags = [];
 		localStorage.removeItem('pullResultToday');
+		localStorage.removeItem('tagsToday');
 		location.reload();
 	};
 
@@ -87,7 +104,7 @@
 </script>
 
 <div class="container">
-	<h1>gachadle</h1>
+	<h1>title</h1>
 
 	<UserCurrency />
 
@@ -111,7 +128,21 @@
 			{/if}
 		</div>
 	{:else}
-		<button on:click={handlePull}>pull</button>
+		<button on:click={handlePull} disabled={selectedTags.length < NUM_SELECTABLE_TAGS}
+			>interact</button
+		>
+
+		{#await getTagsToday(NUM_TAGS)}
+			<p>Loading...</p>
+		{:then tags}
+			{#each tags as tag}
+				<button
+					on:click={() => handleTagSelect(tag)}
+					disabled={selectedTags.length === NUM_SELECTABLE_TAGS && !selectedTags.includes(tag)}
+					class={selectedTags.includes(tag) ? 'tag__selected' : ''}>{tag.name} - {tag.id}</button
+				>
+			{/each}
+		{/await}
 	{/if}
 
 	<EntityList />
@@ -123,6 +154,9 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+	}
+	.tag__selected {
+		font-weight: bold;
 	}
 
 	.entityImg {
