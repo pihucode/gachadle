@@ -3,7 +3,16 @@
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import EntityList from '$lib/components/EntityList.svelte';
 	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
+	import {
+		maxPullsToday,
+		numPullsToday,
+		updatePullRewardHistoryOnDateChange,
+		updatePullRewardHistoryOnPullChange,
+		updateNumPullsToday
+	} from '$lib/utils/pullUtils.js';
+
 	import UserCurrency from '$lib/components/UserCurrency.svelte';
+	import { onMount } from 'svelte';
 
 	const DUP_SHARD_AMT = 5;
 	const MAXED_DUP_SHARD_AMT = 20;
@@ -12,6 +21,12 @@
 	let result;
 	let shards = 0;
 	let dupCount = 0;
+
+	// when component mounts, check if user has pulled today
+	onMount(() => {
+		console.log('Game onMount() called');
+		updatePullRewardHistoryOnDateChange();
+	});
 
 	// check if there is already a result for today in local storage
 	const pullResultToday = () => {
@@ -67,6 +82,10 @@
 		if (!userData.currencies) userData.currencies = { shards: 0 };
 		userData.currencies.shards += shards;
 		localStorage.setItem('userData', JSON.stringify(userData));
+
+		// other updates
+		updateNumPullsToday();
+		updatePullRewardHistoryOnPullChange();
 	};
 
 	const handlePull = async () => {
@@ -93,7 +112,7 @@
 
 	<button on:click={handleReset}>reset</button>
 
-	{#if hasPulledToday || result}
+	{#if numPullsToday() === maxPullsToday() || result}
 		<div class="col">
 			{#await getImageUrl(result.entityImgRef)}
 				<span>loading...</span>
