@@ -1,33 +1,51 @@
 <!-- SignIn.svelte -->
 <script>
-	import {
-		signInWithGoogle,
-		createUserWithEmail,
-		signInWithEmail
-	} from '$lib/services/authService.js';
-	let email = '';
-	let password = '';
+	import { goto } from '$app/navigation';
+	import { createUserWithEmail, signInWithEmail } from '$lib/services/authService.js';
+	import { isSignedIn } from '$lib/stores/authStore.js';
+	let email = 'test1@mail.com';
+	let password = 'testpw123';
 	let showLogin = true;
+
+	const handleSignInWithEmail = async (email, password) => {
+		let user = await signInWithEmail(email, password);
+		if (user) {
+			$isSignedIn = true;
+			goto('/game');
+		} else {
+			console.log('sign in failed');
+		}
+	};
+
+	const handleCreateUserWithEmail = (email, password) => {
+		createUserWithEmail(email, password);
+		if (user) {
+			$isSignedIn = true;
+			goto('/game');
+		} else {
+			console.log('account creation failed');
+		}
+	};
 </script>
 
 <div>
 	{#if showLogin}
-		<form on:submit|preventDefault={() => signInWithEmail(email, password)}>
-			<label>Email:</label>
+		<form on:submit|preventDefault={() => handleSignInWithEmail(email, password)}>
+			<label for="email-input">Email:</label>
 			<input type="email" bind:value={email} required />
 
-			<label>Password:</label>
+			<label for="password-input">Password:</label>
 			<input type="password" bind:value={password} required />
 
 			<button type="submit">Sign In</button>
 		</form>
 		<button on:click={() => (showLogin = false)}>Create Account</button>
 	{:else}
-		<form on:submit|preventDefault={() => createUserWithEmail(email, password)}>
-			<label>Email:</label>
+		<form on:submit|preventDefault={() => handleCreateUserWithEmail(email, password)}>
+			<label for="email-input">Email:</label>
 			<input type="email" bind:value={email} required />
 
-			<label>Password:</label>
+			<label for="password-input">Password:</label>
 			<input type="password" bind:value={password} required />
 
 			<button type="submit">Create User</button>
@@ -35,5 +53,5 @@
 		<button on:click={() => (showLogin = true)}>Sign In</button>
 	{/if}
 
-	<button on:click={signInWithGoogle}>Sign In with Google</button>
+	<!-- <button on:click={signInWithGoogle}>Sign In with Google</button> -->
 </div>

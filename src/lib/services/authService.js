@@ -2,7 +2,8 @@ import { db, firebaseAuth } from '$lib/db/firebase.js';
 import { doc, getDoc, getDocs, addDoc, collection, query, where } from 'firebase/firestore';
 import { getAuth, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider } from "firebase/auth";
 
-export const signInWithGoogle = () => {
+// todo
+const signInWithGoogle = () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider)
@@ -13,6 +14,7 @@ export const signInWithGoogle = () => {
             // The signed-in user info.
             const user = result.user;
             console.log('Signed in:', user);
+            return user;
             // check if user already exists in Firestore
             // if not, create a new user in Firestore
         }).catch((error) => {
@@ -26,27 +28,29 @@ export const createUserWithEmail = async (email, password) => {
     console.log(email, password);
     const auth = getAuth();
     createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
+        .then(async (userCredential) => {
             const user = userCredential.user;
-            console.log('New user created:', user);
             // Store additional user data in Firestore
-            createUserInDb(user.uid, email);
+            let createdUser = await createUserInDb(user.uid, email);
+            console.log('New user created:', createdUser);
+            return createdUser;
         })
         .catch((error) => {
             console.error('Error creating user:', error);
         });
 };
 
-export const signInWithEmail = (email, password) => {
+export const signInWithEmail = async (email, password) => {
     const auth = getAuth();
-    signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-            console.log('Signed in:', user);
-        })
-        .catch((error) => {
-            console.error('Error signing in through email:', error);
-        });
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        const signedInUser = await getUserByUid(user.uid);
+        console.log('Signed in:', signedInUser);
+        return signedInUser;
+    } catch (error) {
+        console.error('Error signing in through email:', error);
+    }
 }
 
 const createUserInDb = async (uid, email) => {
@@ -61,12 +65,9 @@ const createUserInDb = async (uid, email) => {
     console.log('User created with ID: ', docRef.id);
 };
 
-export const getUser = async (uid) => {
-    const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
-    if (userDoc.exists()) {
-        return userDoc.data();
-    } else {
-        return null;
-    }
+export const getUserByUid = async (uid) => {
+    const usersRef = collection(db, 'users-dev');
+    const q = query(usersRef, where('uid', '==', uid));
+    const userDocs = await getDocs(q);
+    return userDocs.docs[0].data();
 };

@@ -12,6 +12,7 @@
 	} from '$lib/utils/pullUtils.js';
 
 	import UserCurrency from '$lib/components/UserCurrency.svelte';
+	import LogoutButton from '$lib/components/Auth/LogoutButton.svelte';
 	import { onMount } from 'svelte';
 
 	const DUP_SHARD_AMT = 5;
@@ -107,6 +108,8 @@
 
 <div class="container">
 	<h1>gachadle</h1>
+
+	<LogoutButton />
 
 	<UserCurrency />
 
