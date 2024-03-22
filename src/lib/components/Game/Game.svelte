@@ -1,5 +1,10 @@
 <script>
-	import { fetchedPullResultToday, fetchRandomFeaturedEntity } from '$lib/services/gachaService.js';
+	import {
+		fetchedPullResultToday,
+		fetchRandomFeaturedEntity,
+		addToPullResultHistory,
+		updateShardsAndDups
+	} from '$lib/services/gachaService.js';
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import EntityList from '$lib/components/Entity/EntityList.svelte';
 	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
@@ -33,65 +38,32 @@
 	// check if there is already a result for today
 	const pullResultToday = async () => {
 		const data = await fetchedPullResultToday($signedInUser.docId);
-		if (data) {
-			const { pullResult } = JSON.parse(data);
-			result = pullResult;
-			return true; // test
-		}
-		return false;
+		if (!data) return false;
+		// const { pullResult } = JSON.parse(data);
+		result = data;
+		return true; // test
 	};
 
 	// TODO: move to service
 	const saveResultToLocalStorage = (result) => {
-		// const pullResultData = {
-		// 	pullResult: result,
-		// 	date: new Date().toLocaleDateString()
-		// };
-		// localStorage.setItem('pullResultToday', JSON.stringify(pullResultData)); // TODO - no longer needed ?
-		// save data to pull history
-		// let arr = JSON.parse(localStorage.getItem('pullHistory')) || [];
-		// arr.push(pullResultData);
-		// localStorage.setItem('pullHistory', JSON.stringify(arr));
-
+		// neeeds duplicates,
 		const pullResultData = {
-			entityDocId: result.docId,
+			entityData: result,
 			date: new Date().toLocaleDateString()
 		};
-		addToPullResultHistory(pullResultData);
+		addToPullResultHistory($signedInUser.docId, pullResultData);
+		// addToOwnedEntities(); // TODO
+		const newOwnedEntity = {
+			entityDocId: result.docId,
+			currentExp: 0,
+			currentLevel: 0,
+			dateAquired: new Date().toLocaleDateString(),
+			duplicates: 0
+		};
 
 		// save data to user data
 		updateShardsAndDups($signedInUser.docId, result);
-		// let userData = JSON.parse(localStorage.getItem('userData')) || {};
-		// let ownedEntities = userData.ownedEntities || [];
-		// let entityData = ownedEntities.find((c) => c.id === result.id);
-		// if (entityData) {
-		// 	// user already owns entity
-		// 	if (entityData.duplicates === MAX_DUP_COUNT) {
-		// 		shards = MAXED_DUP_SHARD_AMT;
-		// 	} else {
-		// 		entityData.duplicates++;
-		// 		shards = DUP_SHARD_AMT;
-		// 	}
-		// 	// update entity data
-		// 	ownedEntities = ownedEntities.map((e) => (e.id === result.id ? entityData : e));
-		// } else {
-		// 	// user doesn't own entity
-		// 	entityData = {
-		// 		id: result.id,
-		// 		duplicates: 0,
-		// 		currentExp: 0,
-		// 		currentLevel: 0,
-		// 		dateAcquired: new Date().toLocaleDateString()
-		// 	};
-		// 	ownedEntities.push(entityData);
-		// }
-		// userData.ownedEntities = ownedEntities;
-		// if (!userData.currencies) userData.currencies = { shards: 0 };
-		// userData.currencies.shards += shards;
-		// localStorage.setItem('userData', JSON.stringify(userData));
-
 		// dupCount = entityData.duplicates; // TODO - specify if a pulled entity is already maxed out
-		// other updates
 		updateNumPullsToday($signedInUser);
 		updatePullRewardHistoryOnPullChange($signedInUser);
 	};
@@ -139,6 +111,9 @@
 			{#if shards > 0}
 				<p>+{shards} shards</p>
 			{/if}
+		</div>
+		<div>
+			<pre>{result}</pre>
 		</div>
 	{:else}
 		<button on:click={handlePull}>pull</button>

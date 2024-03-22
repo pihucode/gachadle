@@ -35,17 +35,26 @@ export const fetchedPullResultToday = async (docId) => {
     if (!history) return null;
     const pullResultToday = history.find(
         (pull) => pull.date === new Date().toLocaleDateString());
-    return pullResultToday;
-    // return userSnapshot.data().pullResultToday;
+    // find the entity in submissions-dev
+    const submissionsRef = doc(db, 'submissions-dev', pullResultToday.entityDocId);
+    const submissionSnapshot = await getDoc(submissionsRef);
+    const entity = submissionSnapshot.data();
+    const res = {
+        ...pullResultToday,
+        entity
+    };
+    console.log("res in fetchedPullResultToday:");
+    console.log(res);
+    return res;
 }
 
-export const addToPullResultHistory = (docId, pullResult) => {
-    const userRef = doc(db, 'users-dev', docId);
+export const addToPullResultHistory = (userDocId, pullResult) => {
+    const userRef = doc(db, 'users-dev', userDocId);
     updateDoc(userRef, { pullResultHistory: arrayUnion(pullResult) });
 };
 
 export const updateShardsAndDups = (userDocId, pullResult) => {
-    console.log('unfinished implementation of method updateShardsAndDups()');
+    console.log('unfinished? implementation of method updateShardsAndDups()');
     const userRef = doc(db, 'users-dev', userDocId);
     // updateDoc(userRef, { shards: 0, duplicates: 0 });
 

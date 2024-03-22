@@ -20,7 +20,6 @@
 		// if (!userData) return;
 		// const entityData = userData.ownedEntities || [];
 		entities = $signedInUser.ownedEntities || [];
-		console.log(entities);
 	};
 
 	const closeModal = () => {
