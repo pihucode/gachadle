@@ -27,5 +27,7 @@
 {#await tick()}
 	<Loading />
 {:then _}
-	<slot />
+	{#if $isSignedIn || $page.url.pathname === '/login'}
+		<slot />
+	{/if}
 {/await}

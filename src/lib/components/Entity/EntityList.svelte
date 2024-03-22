@@ -3,21 +3,24 @@
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import { fetchSubmissionById } from '$lib/services/submissionService.js';
 	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
-	import EntityModal from '$lib/components/EntityModal.svelte';
+	import EntityModal from '$lib/components/Entity/EntityModal.svelte';
+	import { signedInUser } from '$lib/stores/authStore.js';
 
 	let entities = [];
 	let openedModalId = null;
 
 	onMount(() => {
+		console.log('EntityList onMount() called');
 		getAllEntities();
 	});
 
 	const getAllEntities = () => {
-		const userData = JSON.parse(localStorage.getItem('userData'));
-		if (!userData) return;
-		const entityData = userData.ownedEntities || [];
-		// console.log(entityData);
-		entities = entityData;
+		// get all entities belonging to the user
+		// const userData = JSON.parse(localStorage.getItem('userData'));
+		// if (!userData) return;
+		// const entityData = userData.ownedEntities || [];
+		entities = $signedInUser.ownedEntities || [];
+		console.log(entities);
 	};
 
 	const closeModal = () => {

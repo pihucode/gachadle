@@ -2,7 +2,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { createUserWithEmail, signInWithEmail } from '$lib/services/authService.js';
-	import { isSignedIn } from '$lib/stores/authStore.js';
+	import { isSignedIn, signedInUser } from '$lib/stores/authStore.js';
 	let email = 'test1@mail.com';
 	let password = 'testpw123';
 	let showLogin = true;
@@ -11,6 +11,7 @@
 		let user = await signInWithEmail(email, password);
 		if (user) {
 			$isSignedIn = true;
+			$signedInUser = user;
 			goto('/game');
 		} else {
 			console.log('sign in failed');
@@ -21,6 +22,7 @@
 		createUserWithEmail(email, password);
 		if (user) {
 			$isSignedIn = true;
+			$signedInUser = user;
 			goto('/game');
 		} else {
 			console.log('account creation failed');

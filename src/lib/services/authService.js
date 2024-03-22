@@ -63,11 +63,12 @@ const createUserInDb = async (uid, email) => {
     }
     const docRef = await addDoc(collection(db, 'users-dev'), newUser);
     console.log('User created with ID: ', docRef.id);
+    return { ...docRef, docId: docRef.id };
 };
 
 export const getUserByUid = async (uid) => {
     const usersRef = collection(db, 'users-dev');
     const q = query(usersRef, where('uid', '==', uid));
     const userDocs = await getDocs(q);
-    return userDocs.docs[0].data();
+    return { ...userDocs.docs[0].data(), docId: userDocs.docs[0].id };
 };

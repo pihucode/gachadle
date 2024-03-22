@@ -1,16 +1,17 @@
 <script>
 	import { onMount } from 'svelte';
+	import { signedInUser } from '$lib/stores/authStore.js';
 
 	let currency = {};
 
 	onMount(() => {
-		currency = getUserCurrency();
+		currency = getUserCurrency($signedInUser);
 	});
 
-	const getUserCurrency = () => {
-		const userData = JSON.parse(localStorage.getItem('userData'));
-		if (!userData) return;
-		return userData.currencies || {};
+	const getUserCurrency = (user) => {
+		// const userData = JSON.parse(localStorage.getItem('userData'));
+		if (!user) return;
+		return user.currencies || {};
 	};
 </script>
 

@@ -1,5 +1,5 @@
 <script>
-	import Modal from './Modal.svelte';
+	import Modal from '$lib/components/Entity/Modal.svelte';
 	import { getImageUrl } from '$lib/services/fileService.js';
 	import { getRarityName, getRarityStar, getRarityProgress } from '$lib/utils/entityUtils.js';
 

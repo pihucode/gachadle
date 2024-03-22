@@ -1,6 +1,6 @@
 <script>
 	import { getAuth, signOut } from 'firebase/auth';
-	import { isSignedIn } from '$lib/stores/authStore.js';
+	import { isSignedIn, signedInUser } from '$lib/stores/authStore.js';
 
 	const logout = () => {
 		const auth = getAuth();
@@ -9,6 +9,7 @@
 				// Sign-out successful.
 				console.log('signed out');
 				$isSignedIn = false;
+				$signedInUser = null;
 			})
 			.catch((error) => {
 				// An error happened.
