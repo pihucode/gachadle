@@ -2,19 +2,17 @@
 	import { onMount } from 'svelte';
 	import { signedInUser } from '$lib/stores/authStore.js';
 
-	let currency = {};
+	// onMount(() => {
+	// 	currency = getUserCurrency($signedInUser);
+	// });
 
-	onMount(() => {
-		currency = getUserCurrency($signedInUser);
-	});
-
-	const getUserCurrency = (user) => {
+	const getUserCurrency = () => {
 		// const userData = JSON.parse(localStorage.getItem('userData'));
-		if (!user) return;
-		return user.currencies || {};
+		if (!$signedInUser.currencies) return 0;
+		return !$signedInUser.currencies.shards;
 	};
 </script>
 
 <div>
-	<p>Shards: {currency.shards}</p>
+	<p>Shards: {getUserCurrency()}</p>
 </div>

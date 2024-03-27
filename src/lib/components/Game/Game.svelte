@@ -24,6 +24,7 @@
 	import LogoutButton from '$lib/components/Auth/LogoutButton.svelte';
 	import { onMount } from 'svelte';
 	import { signedInUser } from '$lib/stores/authStore.js';
+	import { resetTestUserToInitialState } from '$lib/services/testService.js';
 
 	let result;
 	let shards = 0;
@@ -41,11 +42,12 @@
 		if (!data) return false;
 		// const { pullResult } = JSON.parse(data);
 		result = data;
+		console.log('Gsme pullResultToday:', result);
 		return true; // test
 	};
 
 	// TODO: move to service
-	const saveResultToLocalStorage = (result) => {
+	const saveResult = async (result) => {
 		// neeeds duplicates,
 		const pullResultData = {
 			entityData: result,
@@ -62,7 +64,7 @@
 		};
 
 		// save data to user data
-		updateShardsAndDups($signedInUser.docId, result);
+		await updateShardsAndDups($signedInUser.docId, result);
 		// dupCount = entityData.duplicates; // TODO - specify if a pulled entity is already maxed out
 		updateNumPullsToday($signedInUser);
 		updatePullRewardHistoryOnPullChange($signedInUser);
@@ -72,12 +74,12 @@
 		const res = await fetchRandomFeaturedEntity();
 		result = res;
 		console.log(res);
-		saveResultToLocalStorage(res);
+		await saveResult(res);
 	};
 
 	const handleReset = () => {
 		result = null;
-		// localStorage.removeItem('pullResultToday');
+		resetTestUserToInitialState($signedInUser);
 		location.reload();
 	};
 

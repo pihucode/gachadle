@@ -35,8 +35,10 @@ export const fetchedPullResultToday = async (docId) => {
     if (!history) return null;
     const pullResultToday = history.find(
         (pull) => pull.date === new Date().toLocaleDateString());
+    if (!pullResultToday) return null;
     // find the entity in submissions-dev
-    const submissionsRef = doc(db, 'submissions-dev', pullResultToday.entityDocId);
+    console.log(pullResultToday);
+    const submissionsRef = doc(db, 'submissions-dev', pullResultToday.entityData.docId);
     const submissionSnapshot = await getDoc(submissionsRef);
     const entity = submissionSnapshot.data();
     const res = {
@@ -53,14 +55,15 @@ export const addToPullResultHistory = (userDocId, pullResult) => {
     updateDoc(userRef, { pullResultHistory: arrayUnion(pullResult) });
 };
 
-export const updateShardsAndDups = (userDocId, pullResult) => {
+export const updateShardsAndDups = async (userDocId, pullResult) => {
     console.log('unfinished? implementation of method updateShardsAndDups()');
+    console.log(pullResult);
     const userRef = doc(db, 'users-dev', userDocId);
     // updateDoc(userRef, { shards: 0, duplicates: 0 });
 
     // find all the entities owned by this user
-    let ownedEntities = userRef.collection('ownedEntities') || [];
-    let entityData = ownedEntities.find((e) => e.id === pullResult.id);
+    let ownedEntities = userRef.ownedEntities || [];
+    let entityData = ownedEntities.find((e) => e.id === pullResult.docId);
     let shards = 0;
     if (entityData) {
         // user already owns entity
@@ -71,11 +74,11 @@ export const updateShardsAndDups = (userDocId, pullResult) => {
             shards = DUP_SHARD_AMT;
         }
         // update entity data
-        ownedEntities = ownedEntities.map((e) => (e.id === pullResult.id ? entityData : e));
+        ownedEntities = ownedEntities.map((e) => (e.id === pullResult.docId ? entityData : e));
     } else {
         // user doesn't own entity
         entityData = {
-            id: pullResult.id,
+            id: pullResult.docId,
             duplicates: 0,
             currentExp: 0,
             currentLevel: 0,
@@ -88,5 +91,6 @@ export const updateShardsAndDups = (userDocId, pullResult) => {
         ownedEntities,
         "currencies.shards": increment(shards),
     };
-    userRef.update(updateObj);
+    console.log(updateObj);
+    await updateDoc(userRef, updateObj);
 };

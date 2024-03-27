@@ -108,6 +108,6 @@ export const numPullsToday = (user) => {
 }
 
 export const maxPullsToday = (user) => {
-    if (isDoublePull(user)) return 2;
-    return 1;
+    if (isDoublePull(user)) return 2 * 3;
+    return 1 * 3;
 }
