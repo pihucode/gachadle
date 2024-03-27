@@ -37,17 +37,14 @@ export const fetchedPullResultToday = async (docId) => {
         (pull) => pull.date === new Date().toLocaleDateString());
     if (!pullResultToday) return null;
     // find the entity in submissions-dev
-    console.log(pullResultToday);
-    const submissionsRef = doc(db, 'submissions-dev', pullResultToday.entityData.docId);
-    const submissionSnapshot = await getDoc(submissionsRef);
-    const entity = submissionSnapshot.data();
-    const res = {
-        ...pullResultToday,
-        entity
-    };
-    console.log("res in fetchedPullResultToday:");
-    console.log(res);
-    return res;
+    // const submissionsRef = doc(db, 'submissions-dev', pullResultToday.entityData.docId);
+    // const submissionSnapshot = await getDoc(submissionsRef);
+    // const entity = submissionSnapshot.data();
+    // const res = {
+    //     ...pullResultToday,
+    //     entity
+    // };
+    return pullResultToday;
 }
 
 export const addToPullResultHistory = (userDocId, pullResult) => {
@@ -57,7 +54,7 @@ export const addToPullResultHistory = (userDocId, pullResult) => {
 
 export const updateShardsAndDups = async (userDocId, pullResult) => {
     console.log('unfinished? implementation of method updateShardsAndDups()');
-    console.log(pullResult);
+    // console.log(pullResult);
     const userRef = doc(db, 'users-dev', userDocId);
     // updateDoc(userRef, { shards: 0, duplicates: 0 });
 
@@ -91,6 +88,6 @@ export const updateShardsAndDups = async (userDocId, pullResult) => {
         ownedEntities,
         "currencies.shards": increment(shards),
     };
-    console.log(updateObj);
+    // console.log(updateObj);
     await updateDoc(userRef, updateObj);
 };

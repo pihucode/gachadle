@@ -41,8 +41,8 @@
 		const data = await fetchedPullResultToday($signedInUser.docId);
 		if (!data) return false;
 		// const { pullResult } = JSON.parse(data);
-		result = data;
-		console.log('Gsme pullResultToday:', result);
+		result = data.entityData;
+		console.log('Game pullResultToday:', result);
 		return true; // test
 	};
 
@@ -55,13 +55,13 @@
 		};
 		addToPullResultHistory($signedInUser.docId, pullResultData);
 		// addToOwnedEntities(); // TODO
-		const newOwnedEntity = {
-			entityDocId: result.docId,
-			currentExp: 0,
-			currentLevel: 0,
-			dateAquired: new Date().toLocaleDateString(),
-			duplicates: 0
-		};
+		// const newOwnedEntity = {
+		// 	entityDocId: result.docId,
+		// 	currentExp: 0,
+		// 	currentLevel: 0,
+		// 	dateAquired: new Date().toLocaleDateString(),
+		// 	duplicates: 0
+		// };
 
 		// save data to user data
 		await updateShardsAndDups($signedInUser.docId, result);
@@ -113,9 +113,6 @@
 			{#if shards > 0}
 				<p>+{shards} shards</p>
 			{/if}
-		</div>
-		<div>
-			<pre>{result}</pre>
 		</div>
 	{:else}
 		<button on:click={handlePull}>pull</button>
